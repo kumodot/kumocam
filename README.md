@@ -1,5 +1,9 @@
 # KumoCam
 
+<p align="center">
+  <img src="docs/kumocam_import.png" alt="KumoCam - Import tab with the About dialog open" width="820">
+</p>
+
 The camera import companion — built for the **DJI Osmo Pocket 4 / 4P**,
 works with any camera through camera profiles. Windows (primary) and macOS (secondary).
 Created by **Marcelo Souza / [Kumodot.art](https://kumodot.art)** — 2026 //
