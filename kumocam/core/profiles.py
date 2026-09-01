@@ -1,10 +1,11 @@
 """Camera profiles: per-camera behavior and detection, defined in JSON.
 
 Profiles live in two places, merged at load time:
-- bundled defaults:   kumocam/profiles/*.json  (shipped with the app)
-- user profiles:      <profiles folder from Settings, or ./camera_profiles>
-  User files with the same "id" override bundled ones, so any camera can be
-  added or tweaked without touching code.
+- bundled defaults:   kumocam/profiles/*.json  (shipped with the app,
+  ALWAYS loaded - no configuration needed)
+- extra profiles:     optional folder set in Settings ("Extra profiles
+  folder"). User files with the same "id" override bundled ones, so any
+  camera can be added or tweaked without touching code.
 
 A profile file looks like:
 
@@ -39,6 +40,11 @@ from typing import Dict, List, Optional
 
 _BUNDLED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             "profiles")
+
+
+def bundled_dir() -> str:
+    """Folder with the profiles shipped inside the app (always loaded)."""
+    return _BUNDLED_DIR
 
 
 @dataclass

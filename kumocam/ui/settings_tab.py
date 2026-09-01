@@ -78,10 +78,19 @@ class SettingsTab(QWidget):
             "Where your .cube LUT files live. The Convert tab looks here "
             "first. Download official LUTs from your camera maker's site "
             "(e.g. dji.com/lut) - they cannot be bundled with this app.")
+        from ..core.profiles import bundled_dir
         self.edit_profiles = self._folder_row(
-            ff, "Camera profiles folder:", "profiles_folder",
-            "Extra camera profile .json files (they extend or override the "
-            "bundled DJI Osmo / Lumix / iPhone profiles). Loaded at startup.")
+            ff, "Extra profiles folder:", "profiles_folder",
+            "OPTIONAL. The app already ships camera profiles (DJI Osmo / "
+            "Lumix / iPhone) in its own /profiles folder - those are always "
+            "loaded, nothing to configure. Point this to a folder of extra "
+            ".json profiles only if you want to add cameras or override the "
+            "built-in ones (same \"id\" = override). Loaded at startup.",
+            placeholder="(optional) built-in profiles are always loaded",
+            extra_button=("Built-in...", self._open_bundled_profiles))
+        hint = QLabel(f"Built-in profiles: {bundled_dir()}")
+        hint.setStyleSheet("color: palette(mid); font-style: italic;")
+        ff.addRow("", hint)
         layout.addWidget(folders)
 
         # --- Import table columns -----------------------------------------
@@ -150,11 +159,14 @@ class SettingsTab(QWidget):
         self.settings.setValue("thresholds/huge_video_gb", self.spin_huge_video.value())
 
     def _folder_row(self, form: QFormLayout, label: str, key: str,
-                    tooltip: str) -> QLineEdit:
+                    tooltip: str, placeholder: str = "",
+                    extra_button=None) -> QLineEdit:
         row = QHBoxLayout()
         edit = QLineEdit()
         edit.setText(get_str_setting(key))
         edit.setToolTip(tooltip)
+        if placeholder:
+            edit.setPlaceholderText(placeholder)
         edit.editingFinished.connect(
             lambda e=edit, k=key: self.settings.setValue(k, e.text().strip()))
         btn = QPushButton("Browse...")
@@ -168,8 +180,22 @@ class SettingsTab(QWidget):
         btn.clicked.connect(browse)
         row.addWidget(edit, stretch=1)
         row.addWidget(btn)
+        if extra_button is not None:
+            text, callback = extra_button
+            extra = QPushButton(text)
+            extra.setToolTip("Open the folder with the profiles shipped "
+                             "inside the app (use one as a template).")
+            extra.clicked.connect(callback)
+            row.addWidget(extra)
         form.addRow(label, row)
         return edit
+
+    def _open_bundled_profiles(self):
+        """Open the app's built-in profiles folder in the file manager."""
+        from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        from ..core.profiles import bundled_dir
+        QDesktopServices.openUrl(QUrl.fromLocalFile(bundled_dir()))
 
     def _theme_changed(self, index: int):
         variant = THEMES[index]
