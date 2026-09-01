@@ -25,6 +25,9 @@ class NamingOptions:
     use_orientation: bool = False
     as_suffix: bool = False          # False = prefix (default)
     separator: str = "_"
+    # Mirror of the importer's "LRF > MP4" option so the New name column
+    # previews exactly what will land on disk (X.LRF -> X_LRF.MP4).
+    rename_lrf_to_mp4: bool = False
 
 
 def build_tokens(item: MediaItem, opts: NamingOptions) -> list[str]:
@@ -63,11 +66,17 @@ def build_new_name(item: MediaItem, opts: NamingOptions) -> str:
     stem, ext = os.path.splitext(base)
     tokens = build_tokens(item, opts)
     if not tokens:
-        return base
-    tag = opts.separator.join(tokens)
-    if opts.as_suffix:
-        return f"{stem}{opts.separator}{tag}{ext}"
-    return f"{tag}{opts.separator}{stem}{ext}"
+        name = base
+    else:
+        tag = opts.separator.join(tokens)
+        if opts.as_suffix:
+            name = f"{stem}{opts.separator}{tag}{ext}"
+        else:
+            name = f"{tag}{opts.separator}{stem}{ext}"
+    # Same rule the importer applies on copy, so the preview matches.
+    if opts.rename_lrf_to_mp4 and name.lower().endswith(".lrf"):
+        name = name[:-4] + "_LRF.MP4"
+    return name
 
 
 def apply_naming(items: list[MediaItem], opts: NamingOptions) -> None:

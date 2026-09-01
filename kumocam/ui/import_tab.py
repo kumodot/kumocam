@@ -181,6 +181,8 @@ class ImportTab(QWidget):
             "proxies are renamed to <name>_LRF.MP4 so they play anywhere "
             "and never collide with the full-quality video.")
         self.chk_lrf.toggled.connect(self._lrf_toggled)
+        # Renaming proxies changes the previewed New name of .LRF rows.
+        self.chk_lrf_mp4.toggled.connect(lambda _: self.refresh_names())
         self.chk_wav = QCheckBox("Include WAV audio")
         self.chk_split_orient = QCheckBox("Portrait/Landscape subfolders")
         self.combo_conflict = QComboBox()
@@ -401,6 +403,7 @@ class ImportTab(QWidget):
             use_slow_motion=self.chk_slow.isChecked(),
             use_orientation=self.chk_orient.isChecked(),
             as_suffix=self.toggle_fix.checked,
+            rename_lrf_to_mp4=self.chk_lrf_mp4.isChecked(),
         )
 
     def refresh_names(self):

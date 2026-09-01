@@ -25,7 +25,7 @@ DARK = {
     "text":        "#e6e8ee",
     "text_dim":    "#9aa0ad",
     "row_alt":     "#22242b",
-    "selection":   "#134e48",
+    "selection":   "#1b5b53",   # accent tint, clearly lighter than the rows
     "accent":      ACCENT,
     "accent_hover": ACCENT_HOVER,
     "accent_pressed": ACCENT_PRESSED,
@@ -227,6 +227,14 @@ QTableWidget {{
 QTableWidget::item {{
     padding: 4px 6px;
     border: none;
+}}
+QTableWidget::item:selected {{
+    background: {p['selection']};
+    color: {p['text']};
+}}
+QTableWidget::item:selected:!active {{
+    background: {p['selection']};
+    color: {p['text']};
 }}
 QHeaderView::section {{
     background: {p['surface2']};
