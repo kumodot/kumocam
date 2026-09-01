@@ -121,7 +121,8 @@ class ImportTab(QWidget):
         self.btn_add_folder.clicked.connect(self.add_folder)
         self.btn_scan = QPushButton("Scan")
         self.btn_scan.setProperty("accent", True)
-        self.btn_scan.clicked.connect(self.start_scan)
+        self._scanning = False
+        self.btn_scan.clicked.connect(self._scan_or_stop)
         src_buttons.addWidget(self.btn_refresh)
         src_buttons.addWidget(self.btn_add_folder)
         src_buttons.addWidget(self.btn_scan)
@@ -260,9 +261,13 @@ class ImportTab(QWidget):
         self.btn_import.setProperty("accent", True)
         self.btn_import.setEnabled(False)
         self.btn_import.clicked.connect(self.start_import)
+        self.btn_cancel_import = QPushButton("Cancel")
+        self.btn_cancel_import.setEnabled(False)
+        self.btn_cancel_import.clicked.connect(self._cancel_import)
         target_row.addWidget(self.edit_target, stretch=1)
         target_row.addWidget(btn_browse)
         target_row.addWidget(self.btn_import)
+        target_row.addWidget(self.btn_cancel_import)
         layout.addLayout(target_row)
 
         self.progress = QProgressBar()
@@ -302,12 +307,22 @@ class ImportTab(QWidget):
         return out
 
     # --------------------------------------------------------------- scan
+    def _scan_or_stop(self):
+        if self._scanning:
+            if self.scan_worker:
+                self.scan_worker.cancel()
+            self.btn_scan.setEnabled(False)
+            self.status.setText("Stopping scan...")
+        else:
+            self.start_scan()
+
     def start_scan(self):
         sources = self._checked_sources()
         if not sources:
             QMessageBox.information(self, "No sources", "Tick at least one drive or folder to scan.")
             return
-        self.btn_scan.setEnabled(False)
+        self._scanning = True
+        self.btn_scan.setText("Stop")
         self.btn_import.setEnabled(False)
         self.log.clear()
         self.status.setText("Scanning...")
@@ -323,6 +338,9 @@ class ImportTab(QWidget):
         self.scan_worker.start()
 
     def scan_finished(self, result: ScanResult):
+        was_stopped = bool(self.scan_worker and self.scan_worker._cancel)
+        self._scanning = False
+        self.btn_scan.setText("Scan")
         self.btn_scan.setEnabled(True)
         self.items = result.items
         for line in result.skipped:
@@ -346,7 +364,8 @@ class ImportTab(QWidget):
             if size_flag(i) == "tiny":
                 self.log.appendPlainText(
                     f"WARN possibly corrupted (only {human_size(i.size)}): {i.display_name}")
-        msg = f"Scan complete: {n_photo} photos, {n_video} videos, {n_pano} panoramas."
+        msg = ("Scan STOPPED (partial results): " if was_stopped else "Scan complete: ")
+        msg += f"{n_photo} photos, {n_video} videos, {n_pano} panoramas."
         if n_dup:
             msg += f" {n_dup} already in the library (unchecked)."
         if n_tiny:
@@ -524,6 +543,7 @@ class ImportTab(QWidget):
         )
         self.btn_import.setEnabled(False)
         self.btn_scan.setEnabled(False)
+        self.btn_cancel_import.setEnabled(True)
         self.progress.setVisible(True)
         self.progress.setValue(0)
 
@@ -537,10 +557,17 @@ class ImportTab(QWidget):
         self.progress.setValue(done)
         self.status.setText(f"Copying {done}/{total}: {name}")
 
+    def _cancel_import(self):
+        if self.import_worker:
+            self.import_worker.cancel()
+            self.btn_cancel_import.setEnabled(False)
+            self.status.setText("Cancelling import after the current file...")
+
     def _import_finished(self, copied: int, skipped: int, errors: list):
         self.progress.setVisible(False)
         self.btn_import.setEnabled(True)
         self.btn_scan.setEnabled(True)
+        self.btn_cancel_import.setEnabled(False)
         for err in errors:
             self.log.appendPlainText("IMPORT ERROR: " + err)
         msg = f"Import finished: {copied} files copied, {skipped} skipped."
