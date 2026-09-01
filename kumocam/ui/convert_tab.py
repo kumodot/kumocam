@@ -137,6 +137,19 @@ class ConvertTab(QWidget):
         self.edit_lut.setText(self.settings.value("lut_path", ""))
         btn_lut = QPushButton("LUT file...")
         btn_lut.clicked.connect(self.pick_lut)
+        og.addWidget(QLabel("LUT suffix:"), 3, 0)
+        self.edit_lut_suffix = QLineEdit()
+        self.edit_lut_suffix.setPlaceholderText(
+            "auto (_REC709 for Rec.709 LUTs, _LUT otherwise)")
+        self.edit_lut_suffix.setToolTip(
+            "Custom filename suffix for converted clips when a LUT is "
+            "applied, e.g. KODAK2383. Leave empty for automatic.")
+        self.edit_lut_suffix.setText(self.settings.value("lut_suffix", ""))
+        self.edit_lut_suffix.editingFinished.connect(
+            lambda: self.settings.setValue("lut_suffix",
+                                           self.edit_lut_suffix.text().strip()))
+        og.addWidget(self.edit_lut_suffix, 3, 1, 1, 2)
+
         btn_get_luts = QPushButton("Get official LUTs")
         btn_get_luts.setFlat(True)
         btn_get_luts.setToolTip("Opens dji.com/lut - official LUTs must be "
@@ -415,10 +428,17 @@ class ConvertTab(QWidget):
         if res_edge:
             suffix_parts.append({1920: "_1080p", 1280: "_720p", 3840: "_4K"}.get(res_edge, ""))
         if lut_wanted and any(j.apply_lut for j in selected):
-            # Honest suffix: _REC709 only when the LUT looks like a Rec.709
-            # conversion; any other LUT gets a generic _LUT tag.
-            lut_name = os.path.basename(lut_path).lower()
-            suffix_parts.append("_REC709" if "709" in lut_name else "_LUT")
+            custom = self.edit_lut_suffix.text().strip()
+            if custom:
+                # User-defined suffix, sanitized for filenames.
+                import re
+                custom = re.sub(r"[^A-Za-z0-9_-]", "", custom)
+                suffix_parts.append("_" + custom.lstrip("_"))
+            else:
+                # Auto: _REC709 only when the LUT looks like a Rec.709
+                # conversion; any other LUT gets a generic _LUT tag.
+                lut_name = os.path.basename(lut_path).lower()
+                suffix_parts.append("_REC709" if "709" in lut_name else "_LUT")
         options = ConvertOptions(
             target_long_edge=res_edge,
             codec=codec,
