@@ -121,12 +121,19 @@ class ConvertTab(QWidget):
         self.combo_quality.setCurrentIndex(1)
         og.addWidget(self.combo_quality, 0, 3)
 
-        self.chk_lut = QCheckBox("Apply LUT to D-Log clips")
-        self.chk_lut.setChecked(True)
-        og.addWidget(self.chk_lut, 1, 2)
+        og.addWidget(QLabel("LUT mode:"), 1, 2)
+        self.combo_lut_mode = QComboBox()
+        self.combo_lut_mode.addItems([
+            "Apply to D-Log clips only", "Apply to ALL clips", "Off"])
+        self.combo_lut_mode.setToolTip(
+            "Any .cube LUT works (conversion or creative). 'D-Log only' is "
+            "the safe default for D-Log to Rec.709; 'ALL clips' applies your "
+            "LUT to every video, whatever its gamma.")
+        self.combo_lut_mode.currentIndexChanged.connect(self._lut_mode_changed)
+        og.addWidget(self.combo_lut_mode, 1, 3)
 
         self.edit_lut = QLineEdit()
-        self.edit_lut.setPlaceholderText("Pick the D-Log to Rec.709 .cube file...")
+        self.edit_lut.setPlaceholderText("Pick any .cube LUT (conversion or creative)...")
         self.edit_lut.setText(self.settings.value("lut_path", ""))
         btn_lut = QPushButton("LUT file...")
         btn_lut.clicked.connect(self.pick_lut)
@@ -228,6 +235,7 @@ class ConvertTab(QWidget):
 
     def _probe_done(self, jobs: List[ConvertJob]):
         self.jobs.extend(jobs)
+        self._apply_lut_mode()
         self._fill_table()
         self.btn_convert.setEnabled(bool(self.jobs))
         self.status.setText(f"{len(self.jobs)} videos queued.")
@@ -337,6 +345,21 @@ class ConvertTab(QWidget):
             item.setText(text)
 
     # -------------------------------------------------------------- convert
+    def _apply_lut_mode(self):
+        """Recompute per-job LUT flags from the mode combo."""
+        mode = self.combo_lut_mode.currentIndex()   # 0=dlog only, 1=all, 2=off
+        for job in self.jobs:
+            if mode == 0:
+                job.apply_lut = job.meta.gamma_label.startswith("DLOG")
+            elif mode == 1:
+                job.apply_lut = True
+            else:
+                job.apply_lut = False
+
+    def _lut_mode_changed(self, _index: int):
+        self._apply_lut_mode()
+        self._fill_table()
+
     def _default_lut_folder(self) -> str:
         from .settings_tab import get_str_setting
         return get_str_setting("default_lut_folder")
@@ -375,18 +398,15 @@ class ConvertTab(QWidget):
             QMessageBox.information(self, "Nothing selected", "Tick at least one video.")
             return
 
-        lut_wanted = self.chk_lut.isChecked()
+        self._apply_lut_mode()
+        lut_wanted = self.combo_lut_mode.currentIndex() != 2
         lut_path = self.edit_lut.text().strip()
         if lut_wanted and any(j.apply_lut for j in selected) and not os.path.exists(lut_path):
             QMessageBox.information(
                 self, "LUT file missing",
-                "There are D-Log clips in the queue but no valid .cube file "
-                "is set. Pick the DJI D-Log to Rec.709 LUT, or untick "
-                "'Apply LUT to D-Log clips'.")
+                "The LUT mode is on but no valid .cube file is set. Pick a "
+                "LUT file, or set LUT mode to Off.")
             return
-        if not lut_wanted:
-            for j in self.jobs:
-                j.apply_lut = False
 
         res_edge = RESOLUTION_CHOICES[self.combo_res.currentIndex()][1]
         codec = CODEC_CHOICES[self.combo_codec.currentIndex()][1]
@@ -394,8 +414,11 @@ class ConvertTab(QWidget):
         suffix_parts = []
         if res_edge:
             suffix_parts.append({1920: "_1080p", 1280: "_720p", 3840: "_4K"}.get(res_edge, ""))
-        if lut_wanted:
-            suffix_parts.append("_REC709")
+        if lut_wanted and any(j.apply_lut for j in selected):
+            # Honest suffix: _REC709 only when the LUT looks like a Rec.709
+            # conversion; any other LUT gets a generic _LUT tag.
+            lut_name = os.path.basename(lut_path).lower()
+            suffix_parts.append("_REC709" if "709" in lut_name else "_LUT")
         options = ConvertOptions(
             target_long_edge=res_edge,
             codec=codec,
