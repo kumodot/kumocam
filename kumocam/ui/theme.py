@@ -224,9 +224,11 @@ QTableWidget {{
     selection-background-color: {p['selection']};
     selection-color: {p['text']};
 }}
+/* NOTE: never add 'border' (even 'border: none') to ::item - any border
+   property here makes Qt take over item painting and silently discard the
+   per-cell setBackground() used for the red/orange size warnings. */
 QTableWidget::item {{
     padding: 4px 6px;
-    border: none;
 }}
 QTableWidget::item:selected {{
     background: {p['selection']};
