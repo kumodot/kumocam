@@ -1,0 +1,19 @@
+{
+  "id": "dji-osmo-pocket",
+  "name": "DJI Osmo Pocket",
+  "match": {
+    "exif_make": "DJI",
+    "exif_model": "PP-\\d+|Osmo ?Pocket",
+    "encoder": "DJI Osmo ?Pocket",
+    "filename": "^DJI_\\d{14}_\\d{4}"
+  },
+  "timestamp_in_filename": "DJI_(\\d{14})",
+  "gamma_tags": ["com.dji.camera.ColorGammaSxS"],
+  "skip_extensions": [".lrf"],
+  "panorama": {
+    "grid_3x3": [[6, 2, 7], [5, 1, 8], [4, 3, 9]],
+    "native_app_tip": "DJI Mimo",
+    "tip_applies_to": "3x3"
+  },
+  "notes": "Osmo Pocket 4/4P validated on real files. Slow motion = silent MP4 + same-name AAC sidecar. Panoramas in PANORAMA/<NNN_NNNN>/ (3x3 grid order 6-2-7/5-1-8/4-3-9; 180 is 4 frames left to right)."
+}

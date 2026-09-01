@@ -1,0 +1,11 @@
+{
+  "id": "panasonic-lumix",
+  "name": "Panasonic Lumix",
+  "match": {
+    "exif_make": "Panasonic",
+    "exif_model": "DC-GH\\d|DMC-G\\d|DC-G\\d|DC-S\\d|LUMIX",
+    "filename": "^P\\d{7}\\.|^_?PANA"
+  },
+  "gamma_tags": [],
+  "notes": "Lumix G7 / GH5 and family. Photos P1000123.JPG / .RW2, videos P1000123.MP4 (AVCHD trees use PRIVATE/AVCHD). V-Log detection to be added when real sample files are available."
+}

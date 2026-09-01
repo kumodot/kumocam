@@ -1,0 +1,42 @@
+# --- Personal media: NEVER commit camera samples or library content ---
+SAMPLES/
+*.MP4
+*.mp4
+*.MOV
+*.mov
+*.JPG
+*.jpg
+*.jpeg
+*.DNG
+*.dng
+*.AAC
+*.aac
+*.LRF
+*.lrf
+*.WAV
+*.wav
+
+# LUTs: downloaded by each user from the camera maker (do not redistribute)
+luts/
+DJI_LUTS/
+*.cube
+
+# Local working folders
+_to_delete/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Editors / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

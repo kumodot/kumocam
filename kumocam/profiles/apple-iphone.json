@@ -1,0 +1,12 @@
+{
+  "id": "apple-iphone",
+  "name": "Apple iPhone",
+  "match": {
+    "exif_make": "Apple",
+    "exif_model": "iPhone",
+    "encoder": "com\\.apple|iPhone",
+    "filename": "^IMG_\\d{4}\\."
+  },
+  "gamma_tags": [],
+  "notes": "iPhone photos/videos (IMG_xxxx.HEIC/JPG/MOV). Videos carry com.apple.quicktime.* metadata; photos have full EXIF including GPS."
+}
