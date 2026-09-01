@@ -3,7 +3,7 @@
 The camera import companion — built for the **DJI Osmo Pocket 4 / 4P**,
 works with any camera through camera profiles. Windows (primary) and macOS (secondary).
 Created by **Marcelo Souza / [Kumodot.art](https://kumodot.art)** — 2026 //
-[@Msouza3d](https://x.com/Msouza3d). Credits are in the app's About button.
+[@Msouza3d](https://www.instagram.com/msouza3d/). Credits are in the app's About button.
 
 > **Unofficial app**: this is an independent tool created by a fan, not
 > affiliated with, endorsed or supported by DJI. DJI, Osmo and Mimo are

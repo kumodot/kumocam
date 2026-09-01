@@ -23,7 +23,7 @@ ABOUT_HTML = f"""
     <a href="https://kumodot.art">Kumodot.art</a> &mdash; 2026
   </p>
   <p style="margin-top: 2px;">
-    <a href="https://x.com/Msouza3d">@Msouza3d</a>
+    <a href="https://www.instagram.com/msouza3d/">@Msouza3d</a> (Instagram)
   </p>
   <p style="margin-top: 20px;">
     Import &amp; organize, convert with LUTs, stitch panoramas, geotag.
