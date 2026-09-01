@@ -96,6 +96,11 @@ class ImportTab(QWidget):
         self.chk_skip_red.blockSignals(True)
         self.chk_skip_red.setChecked(self.settings.value("skip_red", "true") in (True, "true"))
         self.chk_skip_red.blockSignals(False)
+        # Remember the show-only-new view filter (default: off).
+        self.chk_only_new.blockSignals(True)
+        self.chk_only_new.setChecked(
+            self.settings.value("show_only_new", "false") in (True, "true"))
+        self.chk_only_new.blockSignals(False)
         self.edit_target.editingFinished.connect(self._recheck_library)
         self.refresh_volumes()
         self._check_ffprobe()
@@ -200,6 +205,18 @@ class ImportTab(QWidget):
         ig.addWidget(self.combo_conflict, 0, 2)
         ig.addWidget(self.chk_skip_red, 1, 2)
         opts_row.addWidget(import_group, stretch=2)
+
+        # Scan filter: which media kinds the next scan looks for.
+        filter_group = QGroupBox("Scan filter")
+        fg = QVBoxLayout(filter_group)
+        self.chk_scan_photos = QCheckBox("Photos")
+        self.chk_scan_videos = QCheckBox("Videos")
+        self.chk_scan_panos = QCheckBox("Panoramas")
+        for c in (self.chk_scan_photos, self.chk_scan_videos, self.chk_scan_panos):
+            c.setChecked(True)
+            c.setToolTip("Applied on the next scan.")
+            fg.addWidget(c)
+        opts_row.addWidget(filter_group, stretch=1)
         layout.addLayout(opts_row)
 
         # --- Results table -------------------------------------------------
@@ -246,8 +263,14 @@ class ImportTab(QWidget):
         self.btn_select_all.clicked.connect(lambda: self._set_all_selected(True))
         self.btn_select_none.clicked.connect(lambda: self._set_all_selected(False))
         self.lbl_summary = QLabel("")
+        self.chk_only_new = QCheckBox("Show only new files")
+        self.chk_only_new.setToolTip(
+            "Hide files already in the target library ('already imported'). "
+            "A view filter only - it can be toggled any time after a scan.")
+        self.chk_only_new.toggled.connect(self._only_new_toggled)
         sel_row.addWidget(self.btn_select_all)
         sel_row.addWidget(self.btn_select_none)
+        sel_row.addWidget(self.chk_only_new)
         sel_row.addWidget(self.lbl_summary)
         sel_row.addStretch(1)
         layout.addLayout(sel_row)
@@ -329,10 +352,22 @@ class ImportTab(QWidget):
         self.log.clear()
         self.status.setText("Scanning...")
 
+        if not (self.chk_scan_photos.isChecked() or self.chk_scan_videos.isChecked()
+                or self.chk_scan_panos.isChecked()):
+            QMessageBox.information(
+                self, "Empty scan filter",
+                "Tick at least one media kind in the Scan filter "
+                "(Photos, Videos or Panoramas).")
+            self._scanning = False
+            self.btn_scan.setText("Scan")
+            return
         options = ScanOptions(
             include_lrf=self.chk_lrf.isChecked(),
             include_wav=self.chk_wav.isChecked(),
             copy_aac_sidecars=self.chk_aac.isChecked(),
+            scan_photos=self.chk_scan_photos.isChecked(),
+            scan_videos=self.chk_scan_videos.isChecked(),
+            scan_panoramas=self.chk_scan_panos.isChecked(),
         )
         self.scan_worker = ScanWorker(sources, options)
         self.scan_worker.progress.connect(self.status.setText)
@@ -454,9 +489,30 @@ class ImportTab(QWidget):
                 self.table.setItem(row, col, cell)
             total_size += item.size
 
-        self.lbl_summary.setText(f"{len(self.items)} items, {human_size(total_size)} total")
+        self._total_size = total_size
         self._filling_table = False
+        self._apply_only_new_filter()
         self.apply_column_visibility()
+
+    def _only_new_toggled(self, checked: bool):
+        self.settings.setValue("show_only_new", checked)
+        self._apply_only_new_filter()
+
+    def _apply_only_new_filter(self):
+        """Hide rows already in the library when 'Show only new files' is on.
+        View filter only - items stay in self.items and keep their row index."""
+        only_new = self.chk_only_new.isChecked()
+        hidden = 0
+        for row, item in enumerate(self.items):
+            hide = only_new and item.in_library
+            self.table.setRowHidden(row, hide)
+            if hide:
+                hidden += 1
+        summary = (f"{len(self.items)} items, "
+                   f"{human_size(getattr(self, '_total_size', 0))} total")
+        if hidden:
+            summary += f" ({hidden} already imported, hidden)"
+        self.lbl_summary.setText(summary)
 
     def apply_column_visibility(self):
         """Hide/show columns per the Settings checkboxes."""

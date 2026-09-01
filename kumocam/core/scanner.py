@@ -22,7 +22,10 @@ from .probe import MediaMeta, probe_photo, probe_video
 
 VIDEO_EXTS = {".mp4", ".mov"}
 PHOTO_EXTS = {".jpg", ".jpeg", ".dng"}
-SKIP_DIRS = {"misc"}
+# MISC = DJI thumbnails/database; the others are OS system folders whose
+# contents ($I... Recycle Bin stubs, indexer data) are never camera media.
+SKIP_DIRS = {"misc", "$recycle.bin", "system volume information",
+             ".trashes", ".spotlight-v100", ".fseventsd"}
 PANORAMA_DIR = "panorama"
 
 
@@ -63,6 +66,10 @@ class ScanOptions:
     include_lrf: bool = False
     include_wav: bool = False
     copy_aac_sidecars: bool = True
+    # Scan filter: which media kinds to look for (all on by default).
+    scan_photos: bool = True
+    scan_videos: bool = True
+    scan_panoramas: bool = True
 
 
 @dataclass
@@ -96,8 +103,9 @@ def _scan_tree(root: str, options: ScanOptions, result: ScanResult,
 
         # Panorama root: each subfolder is one panorama unit.
         if base == PANORAMA_DIR:
-            for sub in sorted(dirnames):
-                _add_panorama(os.path.join(dirpath, sub), result, progress)
+            if options.scan_panoramas:
+                for sub in sorted(dirnames):
+                    _add_panorama(os.path.join(dirpath, sub), result, progress)
             dirnames[:] = []  # handled - do not descend further
             continue
 
@@ -121,6 +129,8 @@ def _scan_tree(root: str, options: ScanOptions, result: ScanResult,
                 continue
 
             if ext in VIDEO_EXTS or (ext == ".lrf" and options.include_lrf):
+                if not options.scan_videos:
+                    continue
                 if progress:
                     progress(f"Reading video metadata: {fname}")
                 stem = os.path.splitext(fname)[0]
@@ -137,6 +147,8 @@ def _scan_tree(root: str, options: ScanOptions, result: ScanResult,
                 result.items.append(item)
 
             elif ext in PHOTO_EXTS:
+                if not options.scan_photos:
+                    continue
                 if progress:
                     progress(f"Reading photo metadata: {fname}")
                 item = MediaItem(kind="photo", src_path=fpath, size=_safe_size(fpath))
