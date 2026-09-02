@@ -1,8 +1,18 @@
 # KumoCam
 
-![Version](https://img.shields.io/badge/version-0.12.0-2dd4bf)
+![Version](https://img.shields.io/github/v/release/kumodot/kumocam?color=2dd4bf&label=version)
 ![License](https://img.shields.io/badge/license-GPL--3.0%20%2B%20Commons%20Clause-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)
+
+<p align="center">
+  <a href="https://github.com/kumodot/kumocam/releases/latest">
+    <img src="https://img.shields.io/badge/%E2%AC%87%20Download%20KumoCam%20for%20Windows-installer%20or%20portable-2dd4bf?style=for-the-badge" alt="Download KumoCam for Windows">
+  </a>
+</p>
+
+No Python, no command line: grab **`KumoCam-Setup-<version>.exe`** from the
+[latest release](https://github.com/kumodot/kumocam/releases/latest), double-click,
+done. A portable .zip is there too. macOS: run from source for now (below).
 
 <p align="center">
   <img src="docs/kumocam_import.png" alt="KumoCam - Import tab with the About dialog open" width="820">
