@@ -39,7 +39,14 @@ a = Analysis(
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
-    excludes=["tkinter"],
+    excludes=[
+        "tkinter",
+        # The map picker opens in the system browser - no embedded Chromium.
+        "PySide6.QtWebEngineWidgets", "PySide6.QtWebEngineCore",
+        "PySide6.QtWebEngineQuick", "PySide6.QtWebChannel",
+        "PySide6.QtQuick", "PySide6.QtQml", "PySide6.QtQuickWidgets",
+        "PySide6.QtPositioning", "PySide6.QtPdf", "PySide6.QtPdfWidgets",
+    ],
     noarchive=False,
 )
 # Trim dead weight: Chromium devtools debug resources (72 MB, unused).

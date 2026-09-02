@@ -134,13 +134,7 @@ class GeotagTab(QWidget):
         self._update_apply()
 
     def pick_on_map(self):
-        from .map_dialog import WEBENGINE_AVAILABLE, MapPickerDialog
-        if not WEBENGINE_AVAILABLE:
-            QMessageBox.information(
-                self, "Map unavailable",
-                "Qt WebEngine is not installed in this environment. "
-                "Paste coordinates from Google Maps instead.")
-            return
+        from .map_dialog import MapPickerDialog
         initial = (self.coords[0], self.coords[1]) if self.coords else None
         dialog = MapPickerDialog(initial, self)
         if dialog.exec() and dialog.coords:
