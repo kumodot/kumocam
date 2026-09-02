@@ -25,6 +25,10 @@ ABOUT_HTML = f"""
   <p style="margin-top: 2px;">
     <a href="https://www.instagram.com/msouza3d/">@Msouza3d</a> (Instagram)
   </p>
+  <p style="margin-top: 10px; font-size: 14px;">
+    &#9749; Enjoying KumoCam? Donations of any size keep it going:<br>
+    <a href="https://ko-fi.com/msouza3d"><b>Support Marcelo Souza on Ko-fi</b></a>
+  </p>
   <p style="margin-top: 20px;">
     Import &amp; organize, convert with LUTs, stitch panoramas, geotag.
   </p>
