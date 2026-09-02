@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in KumoCam is not working as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! The more detail you give,
+        the faster it can be fixed.
+  - type: input
+    id: version
+    attributes:
+      label: KumoCam version
+      description: Shown in the window title and in the About dialog.
+      placeholder: "v0.11.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: camera
+    attributes:
+      label: Camera
+      description: Which camera were the files from?
+      placeholder: "DJI Osmo Pocket 4P / Lumix GH5 / iPhone 15 / ..."
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        1. Scanned the SD card...
+        2. Clicked Import...
+        3. Expected X, but got Y
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Scan log / error messages
+      description: Paste anything relevant from the log panel or the terminal.
+      render: text
+  - type: textarea
+    id: files
+    attributes:
+      label: Example file names (optional)
+      description: >
+        If the bug involves specific files, paste a few file names (e.g.
+        DJI_20260901094211_0022_D.MP4). Please do NOT upload personal media.

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ideas, questions and general discussion
+    url: https://github.com/kumodot/kumocam/discussions
+    about: For open-ended ideas and questions, start a Discussion instead of an Issue.
+  - name: Support the project
+    url: https://ko-fi.com/msouza3d
+    about: KumoCam is free - donations of any size are very welcome!

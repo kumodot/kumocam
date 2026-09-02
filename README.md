@@ -113,6 +113,12 @@ the original work.
 - More camera profiles (bring sample files!), Convert presets.
 - Packaging: single installer with bundled FFmpeg/ExifTool.
 
+## Feedback
+
+- Found a bug? [Open a bug report](https://github.com/kumodot/kumocam/issues/new?template=bug_report.yml).
+- Have a feature idea? [Open a feature request](https://github.com/kumodot/kumocam/issues/new?template=feature_request.yml)
+  or start a thread in [Discussions](https://github.com/kumodot/kumocam/discussions).
+
 ## Support
 
 If this app saves you time, donations of any amount at

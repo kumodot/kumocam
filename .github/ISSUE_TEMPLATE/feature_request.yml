@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a new feature or an improvement
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? Great! For open-ended discussions and questions, the
+        Discussions tab is also a good place to start.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the workflow or situation where you miss this feature.
+      placeholder: "After importing hundreds of clips, I always need to..."
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Describe your idea
+      description: How do you imagine it working in the app?
+    validations:
+      required: true
+  - type: input
+    id: camera
+    attributes:
+      label: Camera (if relevant)
+      placeholder: "DJI Osmo Pocket 4P / any camera"
