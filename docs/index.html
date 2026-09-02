@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KumoCam - the camera import companion</title>
+<meta name="description" content="Free camera import companion for the DJI Osmo Pocket 4/4P and any camera: organize, convert with LUTs, stitch panoramas and geotag - without ever touching your originals.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #17181c;
+    --bg-mid:      #1f2127;
+    --surface:     #262932;
+    --teal:        #2dd4bf;
+    --teal-deep:   #14b8a6;
+    --teal-glow:   rgba(45, 212, 191, 0.12);
+    --amber:       #f5a623;
+    --text:        #e6e8ee;
+    --text-muted:  rgba(230, 232, 238, 0.66);
+    --card-bg:     rgba(45, 212, 191, 0.055);
+    --card-border: rgba(45, 212, 191, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+  a { color: var(--teal); }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); overflow: hidden; }
+  .hero-content { position: relative; z-index: 2; text-align: center; max-width: 820px; padding: 60px 24px; }
+  .hero-logo { width: 92px; height: 92px; margin-bottom: 26px; }
+  .hero-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 18px; }
+  .hero-title { font-size: clamp(44px, 7vw, 76px); font-weight: 800; line-height: 1.06; margin-bottom: 22px; }
+  .hero-title .accent { color: var(--teal); }
+  .hero-subtitle { font-size: 18px; line-height: 1.65; color: var(--text-muted); max-width: 640px; margin: 0 auto 34px; }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    display: inline-block; background: var(--teal); color: #06231d;
+    padding: 16px 40px; border-radius: 8px; font-weight: 700; font-size: 17px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .btn-primary:hover { background: var(--teal-deep); transform: translateY(-2px); }
+  .btn-ghost {
+    display: inline-block; background: transparent; color: var(--text);
+    padding: 15px 28px; border-radius: 8px; font-weight: 600; font-size: 15px;
+    border: 1px solid rgba(230, 232, 238, 0.25); text-decoration: none;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+  }
+  .btn-ghost:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .hero-note { margin-top: 18px; font-size: 13.5px; color: var(--text-muted); }
+  .hero-note a { color: var(--text-muted); text-decoration: underline; }
+
+  .hero-shapes-back, .hero-shapes-mid { position: absolute; inset: 0; pointer-events: none; }
+  .shape-rect { position: absolute; top: 12%; right: 7%; width: 340px; height: 200px;
+    border: 2px solid rgba(45, 212, 191, 0.12); border-radius: 12px; }
+  .shape-circle { position: absolute; bottom: 22%; left: 8%; width: 70px; height: 70px;
+    border-radius: 50%; background: rgba(45, 212, 191, 0.07); }
+  .shape-diamond { position: absolute; top: 58%; right: 16%; width: 55px; height: 55px;
+    background: rgba(245, 166, 35, 0.16); transform: rotate(45deg); }
+  .shape-dot { position: absolute; top: 28%; left: 7%; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--teal); }
+
+  @keyframes floatA { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-16px) rotate(4deg); } }
+  @keyframes floatB { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-11px) rotate(-3deg); } }
+  @keyframes floatC { 0%,100% { transform: translateY(0) rotate(45deg); } 50% { transform: translateY(-9px) rotate(50deg); } }
+  .float-a { animation: floatA 7s ease-in-out infinite; }
+  .float-b { animation: floatB 9s ease-in-out infinite 1.5s; }
+  .float-c { animation: floatC 6s ease-in-out infinite 0.5s; }
+
+  @keyframes bounce { 0%,100% { transform: translate(-50%, 0); opacity: 0.5; } 50% { transform: translate(-50%, 7px); opacity: 1; } }
+  .scroll-indicator { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    animation: bounce 2s ease-in-out infinite; cursor: pointer; z-index: 2; }
+
+  /* ---------- Screenshot ---------- */
+  .shot-section { background: var(--bg-mid); padding: 96px 24px; }
+  .shot-inner { max-width: 1060px; margin: 0 auto; text-align: center; }
+  .section-h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 700; margin-bottom: 14px; }
+  .section-sub { font-size: 16.5px; color: var(--text-muted); margin-bottom: 44px; }
+  .shot-frame { border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45); }
+  .shot-frame img { display: block; width: 100%; height: auto; }
+
+  /* ---------- Features ---------- */
+  .features-section { padding: 100px 24px; background: var(--bg); }
+  .features-head { text-align: center; margin-bottom: 52px; }
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1100px; margin: 0 auto; }
+  @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 580px) { .features-grid { grid-template-columns: 1fr; } }
+  .feature-card { background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 34px 26px;
+    transition: background 0.25s, border-color 0.25s, transform 0.25s; }
+  .feature-card:hover { background: rgba(45, 212, 191, 0.1); border-color: rgba(45, 212, 191, 0.32); transform: translateY(-5px); }
+  .feature-card svg { width: 30px; height: 30px; stroke: var(--teal); fill: none; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; margin-bottom: 18px; }
+  .feature-card h3 { font-size: 21px; font-weight: 600; margin-bottom: 10px; }
+  .feature-card p { font-size: 15px; line-height: 1.6; color: var(--text-muted); }
+
+  /* ---------- Closing ---------- */
+  .closing-section { padding: 120px 24px 90px; text-align: center; background: var(--bg-mid); position: relative; overflow: hidden; }
+  .closing-content { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; }
+  .closing-glow { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 420px 210px at 50% 55%, var(--teal-glow), transparent); }
+  .closing-h { font-size: clamp(36px, 6vw, 56px); font-weight: 800; margin-bottom: 16px; }
+  .closing-sub { font-size: 17px; color: var(--text-muted); margin-bottom: 32px; }
+  .disclaimer { margin-top: 56px; font-size: 13px; line-height: 1.7; color: var(--text-muted);
+    max-width: 620px; margin-left: auto; margin-right: auto; }
+  .disclaimer strong { color: var(--text); }
+
+  /* ---------- Footer ---------- */
+  footer { background: var(--bg); border-top: 1px solid rgba(230, 232, 238, 0.08);
+    padding: 34px 24px; text-align: center; font-size: 14px; color: var(--text-muted); }
+  footer .links { margin-bottom: 10px; display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+  footer a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-shapes-back">
+    <div class="shape-rect float-a"></div>
+    <div class="shape-circle float-b"></div>
+  </div>
+  <div class="hero-shapes-mid">
+    <div class="shape-diamond float-c"></div>
+    <div class="shape-dot float-b"></div>
+  </div>
+
+  <div class="hero-content">
+    <img class="hero-logo" src="logo.png" alt="KumoCam logo">
+    <div class="hero-eyebrow">Free &amp; open source &middot; Windows</div>
+    <h1 class="hero-title">Your camera footage,<br><span class="accent">organized in one click.</span></h1>
+    <p class="hero-subtitle">
+      KumoCam is the import companion built for the DJI Osmo Pocket 4/4P - and any
+      camera. Organize into date folders with smart metadata names, convert D-Log
+      with LUTs, stitch panoramas and geotag. Your original files are never touched.
+    </p>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="https://github.com/kumodot/kumocam/releases/latest">&#11015; Download for Windows</a>
+      <a class="btn-ghost" href="https://github.com/kumodot/kumocam">View on GitHub</a>
+    </div>
+    <p class="hero-note">
+      Simple installer or portable .zip &middot; FFmpeg included &middot;
+      macOS: <a href="https://github.com/kumodot/kumocam#macos">run from source</a>
+    </p>
+  </div>
+
+  <div class="scroll-indicator" onclick="document.querySelector('.shot-section').scrollIntoView({behavior:'smooth'})">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+  </div>
+</section>
+
+<!-- ================= SCREENSHOT ================= -->
+<section class="shot-section">
+  <div class="shot-inner">
+    <h2 class="section-h2 shot-headline">Scan. Review. Import.</h2>
+    <p class="section-sub shot-headline">
+      One screen shows everything: what is new, what you already imported,
+      and what looks corrupted - before a single file is copied.
+    </p>
+    <div class="shot-frame shot-image">
+      <img src="kumocam_import.png" alt="KumoCam import tab scanning an Osmo Pocket SD card">
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="features-section">
+  <div class="features-head">
+    <h2 class="section-h2 features-headline">Everything between camera and edit</h2>
+    <p class="section-sub features-headline">The boring parts of the footage pipeline, handled.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/><circle cx="7" cy="7" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="17" cy="17" r="1.6"/></svg>
+      <h3>Lightroom-style import</h3>
+      <p>Date folders, PHOTOS / VIDEOS / PANORAMA split, and filenames enriched with resolution, fps, gamma and slow-motion tags - file dates untouched.</p>
+    </div>
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 5v14M16 5v14M2 12h20"/></svg>
+      <h3>Convert with LUTs</h3>
+      <p>Batch 4K to 1080p with any .cube LUT (D-Log to Rec.709 and beyond), merge clips, mute audio per clip - FFmpeg ships inside the app.</p>
+    </div>
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><path d="M2 12c3-5 7-5 10 0s7 5 10 0"/><path d="M2 17c3-5 7-5 10 0s7 5 10 0" opacity="0.5"/></svg>
+      <h3>Panorama stitching</h3>
+      <p>Stitch the Osmo's 3x3 grid and 180&deg; panoramas right on your PC - with honest advice when the official app would do a better job.</p>
+    </div>
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      <h3>Geotagging</h3>
+      <p>Cameras without GPS? Pick a point on a map in your browser, copy from a reference photo, or paste coordinates - applied to whole batches.</p>
+    </div>
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.4"/><path d="M8 6l1.5-2h5L16 6"/></svg>
+      <h3>Camera profiles</h3>
+      <p>Auto-detects your camera from metadata (Osmo Pocket, Lumix, iPhone out of the box) - and any camera can be added with a small JSON file.</p>
+    </div>
+    <div class="feature-card">
+      <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h3>Safe by design</h3>
+      <p>Originals are only ever read. Duplicate detection warns before re-importing, corrupted-looking files are flagged, and drives eject safely from the app.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLOSING ================= -->
+<section class="closing-section">
+  <div class="closing-glow"></div>
+  <div class="closing-content">
+    <h2 class="closing-h">Stop babysitting your SD cards.</h2>
+    <p class="closing-sub">Free, open source, and ready in two clicks.</p>
+    <a class="btn-primary" href="https://github.com/kumodot/kumocam/releases/latest">&#11015; Download KumoCam</a>
+    <p class="disclaimer">
+      <strong>Unofficial app:</strong> KumoCam is an independent tool created by a fan,
+      not affiliated with, endorsed or supported by DJI. DJI, Osmo and Mimo are
+      trademarks of DJI. License: GPL-3.0 with Commons Clause (non-commercial).
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="links">
+    <a href="https://github.com/kumodot/kumocam">GitHub</a>
+    <a href="https://github.com/kumodot/kumocam/discussions">Discussions</a>
+    <a href="https://ko-fi.com/msouza3d">Support on Ko-fi</a>
+    <a href="https://www.instagram.com/msouza3d/">Instagram</a>
+    <a href="https://kumodot.art">Kumodot.art</a>
+  </div>
+  Created by Marcelo Souza / Kumodot.art &mdash; 2026 // @Msouza3d
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.set([".hero-logo", ".hero-eyebrow", ".hero-title", ".hero-subtitle", ".hero-ctas", ".hero-note", ".scroll-indicator"],
+           { opacity: 0, y: 30 });
+  gsap.timeline({ delay: 0.2 })
+    .to(".hero-logo",       { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" })
+    .to(".hero-eyebrow",    { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.4")
+    .to(".hero-title",      { opacity: 1, y: 0, duration: 1.0, ease: "power3.out" }, "-=0.3")
+    .to(".hero-subtitle",   { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, "-=0.5")
+    .to(".hero-ctas",       { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, "-=0.4")
+    .to(".hero-note",       { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.4")
+    .to(".scroll-indicator",{ opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "-=0.2");
+
+  var hero = document.querySelector('.hero');
+  hero.addEventListener('mousemove', function (e) {
+    var rect = hero.getBoundingClientRect();
+    var xPct = (e.clientX - rect.left) / rect.width - 0.5;
+    var yPct = (e.clientY - rect.top) / rect.height - 0.5;
+    gsap.to(".hero-shapes-back", { duration: 2.0, x: xPct * -45, y: yPct * -22, ease: "power1.out" });
+    gsap.to(".hero-shapes-mid",  { duration: 1.5, x: xPct * -22, y: yPct * -11, ease: "power1.out" });
+    gsap.to(".hero-content",     { duration: 1.2, x: xPct *   8, y: yPct *   5, ease: "power1.out" });
+  });
+
+  gsap.from(".shot-headline", {
+    scrollTrigger: { trigger: ".shot-section", start: "top 72%" },
+    opacity: 0, y: 35, duration: 0.8, ease: "power3.out"
+  });
+  gsap.from(".shot-image", {
+    scrollTrigger: { trigger: ".shot-section", start: "top 62%" },
+    opacity: 0, y: 60, scale: 0.96, duration: 1.0, ease: "power3.out"
+  });
+
+  gsap.set(".feature-card", { opacity: 0, y: 55, rotateX: 18,
+    transformPerspective: 900, transformOrigin: "top center" });
+  gsap.to(".feature-card", {
+    scrollTrigger: { trigger: ".features-section", start: "top 68%", toggleActions: "play none none reverse" },
+    opacity: 1, y: 0, rotateX: 0, duration: 0.75, stagger: 0.11, ease: "power2.out"
+  });
+  gsap.from(".features-headline", {
+    scrollTrigger: { trigger: ".features-section", start: "top 72%" },
+    opacity: 0, y: 35, duration: 0.8, ease: "power3.out"
+  });
+  gsap.from(".closing-content", {
+    scrollTrigger: { trigger: ".closing-section", start: "top 72%" },
+    opacity: 0, y: 45, duration: 1.0, ease: "power3.out"
+  });
+</script>
+</body>
+</html>
