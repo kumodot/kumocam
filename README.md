@@ -1,5 +1,9 @@
 # KumoCam
 
+![Version](https://img.shields.io/badge/version-0.11.1-2dd4bf)
+![License](https://img.shields.io/badge/license-GPL--3.0%20%2B%20Commons%20Clause-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)
+
 <p align="center">
   <img src="docs/kumocam_import.png" alt="KumoCam - Import tab with the About dialog open" width="820">
 </p>
