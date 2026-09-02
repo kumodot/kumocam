@@ -128,8 +128,14 @@ class ImportTab(QWidget):
         self.btn_scan.setProperty("accent", True)
         self._scanning = False
         self.btn_scan.clicked.connect(self._scan_or_stop)
+        self.btn_eject = QPushButton("Eject drives")
+        self.btn_eject.setToolTip(
+            "Safely eject the CHECKED removable drives (e.g. the Osmo "
+            "internal memory and SD card) so you can unplug the camera.")
+        self.btn_eject.clicked.connect(self._eject_checked)
         src_buttons.addWidget(self.btn_refresh)
         src_buttons.addWidget(self.btn_add_folder)
+        src_buttons.addWidget(self.btn_eject)
         src_buttons.addWidget(self.btn_scan)
         src_buttons.addStretch(1)
         src_layout.addLayout(src_buttons)
@@ -282,6 +288,9 @@ class ImportTab(QWidget):
         self.edit_target.setPlaceholderText("Choose where the organized files will be created...")
         btn_browse = QPushButton("Browse...")
         btn_browse.clicked.connect(self.pick_target)
+        btn_open_target = QPushButton("Open")
+        btn_open_target.setToolTip("Open the target folder in your file manager.")
+        btn_open_target.clicked.connect(self._open_target)
         self.btn_import = QPushButton("Import")
         self.btn_import.setProperty("accent", True)
         self.btn_import.setEnabled(False)
@@ -291,6 +300,7 @@ class ImportTab(QWidget):
         self.btn_cancel_import.clicked.connect(self._cancel_import)
         target_row.addWidget(self.edit_target, stretch=1)
         target_row.addWidget(btn_browse)
+        target_row.addWidget(btn_open_target)
         target_row.addWidget(self.btn_import)
         target_row.addWidget(self.btn_cancel_import)
         layout.addLayout(target_row)
@@ -313,6 +323,40 @@ class ImportTab(QWidget):
             if vol.looks_like_osmo:
                 item.setText(vol.display + "   [Osmo detected]")
             self.volume_list.addItem(item)
+
+    def _eject_checked(self):
+        """Safely eject every CHECKED source that is a real volume root
+        (drive letter / mounted volume). Added folders are ignored."""
+        import os as _os
+        import sys as _sys
+        from ..core.drives import eject_volume
+
+        def is_volume_root(p: str) -> bool:
+            if _os.name == "nt":
+                return len(p.rstrip("\\/")) == 2 and p[1] == ":"
+            if _sys.platform == "darwin":
+                return p.startswith("/Volumes/")
+            return p.startswith(("/media/", "/mnt/"))
+
+        targets = [s for s in self._checked_sources() if is_volume_root(s)]
+        if not targets:
+            QMessageBox.information(
+                self, "Nothing to eject",
+                "Tick the drive(s) you want to eject in the Sources list "
+                "(added folders cannot be ejected).")
+            return
+        messages, all_ok = [], True
+        for path in targets:
+            ok, msg = eject_volume(path)
+            all_ok = all_ok and ok
+            messages.append(("OK  " if ok else "FAIL  ") + msg)
+            self.log.appendPlainText(msg)
+        self.refresh_volumes()
+        if all_ok:
+            self.status.setText("Ejected: " + ", ".join(targets) +
+                                " - safe to unplug the camera.")
+        else:
+            QMessageBox.warning(self, "Eject", "\n".join(messages))
 
     def add_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Add source folder")
@@ -562,6 +606,19 @@ class ImportTab(QWidget):
                     item.selected = False
 
     # ------------------------------------------------------------- import
+    def _open_target(self):
+        """Open the target (dump) folder in Explorer / Finder."""
+        import os as _os
+        from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        folder = self.edit_target.text().strip()
+        if not folder or not _os.path.isdir(folder):
+            QMessageBox.information(
+                self, "No folder",
+                "Set a valid target folder first (Browse...).")
+            return
+        QDesktopServices.openUrl(QUrl.fromLocalFile(folder))
+
     def pick_target(self):
         folder = QFileDialog.getExistingDirectory(self, "Choose target folder",
                                                   self.edit_target.text().strip())

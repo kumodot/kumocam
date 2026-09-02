@@ -91,6 +91,79 @@ def _linux_volumes() -> List[Volume]:
     return volumes
 
 
+def eject_volume(path: str) -> tuple:
+    """Safely eject a removable volume ('H:\\' or '/Volumes/X').
+    Returns (ok, message). Fails cleanly when files are still open."""
+    if os.name == "nt":
+        return _windows_eject(path)
+    if sys.platform == "darwin":
+        return _run_eject(["diskutil", "eject", path], path)
+    return _run_eject(["umount", path], path)
+
+
+def _run_eject(cmd, path: str) -> tuple:
+    import subprocess
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, f"Eject failed for {path}: {exc}"
+    if proc.returncode == 0:
+        return True, f"Ejected {path}"
+    detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+    return False, f"Eject failed for {path}: {detail[-1] if detail else 'unknown error'}"
+
+
+def _windows_eject(path: str) -> tuple:
+    """Lock, dismount and eject via DeviceIoControl (no admin required for
+    removable drives, as long as no program holds files open on it)."""
+    import ctypes
+    import time
+
+    letter = path.rstrip("\\/").rstrip(":")
+    device = f"\\\\.\\{letter}:"
+    kernel32 = ctypes.windll.kernel32
+
+    GENERIC_READ, GENERIC_WRITE = 0x80000000, 0x40000000
+    FILE_SHARE_READ, FILE_SHARE_WRITE = 0x1, 0x2
+    OPEN_EXISTING = 3
+    INVALID_HANDLE = ctypes.c_void_p(-1).value
+    FSCTL_LOCK_VOLUME = 0x00090018
+    FSCTL_DISMOUNT_VOLUME = 0x00090020
+    IOCTL_STORAGE_MEDIA_REMOVAL = 0x002D4804
+    IOCTL_STORAGE_EJECT_MEDIA = 0x002D4808
+
+    handle = kernel32.CreateFileW(device, GENERIC_READ | GENERIC_WRITE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                  None, OPEN_EXISTING, 0, None)
+    if handle == INVALID_HANDLE:
+        return False, f"Eject failed for {path}: cannot open the drive"
+
+    def ioctl(code, inbuf=None, insize=0):
+        returned = ctypes.c_ulong(0)
+        return bool(kernel32.DeviceIoControl(
+            handle, code, inbuf, insize, None, 0,
+            ctypes.byref(returned), None))
+
+    try:
+        locked = False
+        for _ in range(5):  # a just-finished copy may hold the lock briefly
+            if ioctl(FSCTL_LOCK_VOLUME):
+                locked = True
+                break
+            time.sleep(0.5)
+        if not locked:
+            return False, (f"Eject failed for {path}: the drive is in use "
+                           "(close Explorer windows or players using it)")
+        ioctl(FSCTL_DISMOUNT_VOLUME)
+        allow_removal = ctypes.c_ubyte(0)  # PreventMediaRemoval = FALSE
+        ioctl(IOCTL_STORAGE_MEDIA_REMOVAL, ctypes.byref(allow_removal), 1)
+        if not ioctl(IOCTL_STORAGE_EJECT_MEDIA):
+            return False, f"Eject failed for {path}: device refused to eject"
+        return True, f"Ejected {path} - safe to unplug"
+    finally:
+        kernel32.CloseHandle(handle)
+
+
 def _looks_like_osmo(vol: Volume) -> bool:
     label = vol.label.lower()
     if any(h in label for h in DJI_LABEL_HINTS):
