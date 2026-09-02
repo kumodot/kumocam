@@ -40,3 +40,8 @@ dist/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Packaging build outputs
+packaging/ffmpeg_bin/
+packaging/Output/
+packaging/*.zip

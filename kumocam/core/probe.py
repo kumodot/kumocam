@@ -46,12 +46,22 @@ def find_ffprobe() -> Optional[str]:
 
     exe = "ffprobe.exe" if os.name == "nt" else "ffprobe"
 
-    # 1. Bundled next to the application (bin/ffprobe[.exe])
-    app_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    for candidate in (os.path.join(app_dir, "bin", exe), os.path.join(app_dir, exe)):
-        if os.path.exists(candidate):
-            _FFPROBE_CACHE = candidate
-            return candidate
+    # 1. Bundled next to the application (bin/ffprobe[.exe]).
+    #    Covers both a source checkout and a frozen (PyInstaller) build,
+    #    where the binaries ship in <exe dir>/bin or <_internal>/bin.
+    import sys as _sys
+    app_dirs = [os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))]
+    if getattr(_sys, "frozen", False):
+        app_dirs.append(os.path.dirname(_sys.executable))
+        meipass = getattr(_sys, "_MEIPASS", "")
+        if meipass:
+            app_dirs.append(meipass)
+    for app_dir in app_dirs:
+        for candidate in (os.path.join(app_dir, "bin", exe),
+                          os.path.join(app_dir, exe)):
+            if os.path.exists(candidate):
+                _FFPROBE_CACHE = candidate
+                return candidate
 
     # 2. PATH
     found = shutil.which("ffprobe")
