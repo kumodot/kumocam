@@ -15,7 +15,7 @@ No Python, no command line: grab **`KumoCam-Setup-<version>.exe`** from the
 done. A portable .zip is there too. macOS: run from source for now (below).
 
 <p align="center">
-  <img src="docs/kumocam_import.png" alt="KumoCam - Import tab with the About dialog open" width="820">
+  <img src="docs/kumocam_tour.gif" alt="KumoCam tour: scanning, importing and converting camera footage" width="820">
 </p>
 
 The camera import companion — built for the **DJI Osmo Pocket 4 / 4P**,

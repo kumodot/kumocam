@@ -81,7 +81,14 @@
   .section-sub { font-size: 16.5px; color: var(--text-muted); margin-bottom: 44px; }
   .shot-frame { border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden;
     box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45); }
-  .shot-frame img { display: block; width: 100%; height: auto; }
+  .shot-frame img, .shot-frame video { display: block; width: 100%; height: auto; }
+  .btn-kofi {
+    display: inline-block; background: transparent; color: var(--amber);
+    padding: 15px 28px; border-radius: 8px; font-weight: 700; font-size: 15px;
+    border: 1px solid rgba(245, 166, 35, 0.55); text-decoration: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .btn-kofi:hover { background: rgba(245, 166, 35, 0.12); transform: translateY(-2px); }
 
   /* ---------- Features ---------- */
   .features-section { padding: 100px 24px; background: var(--bg); }
@@ -141,6 +148,7 @@
     </p>
     <div class="hero-ctas">
       <a class="btn-primary" href="https://github.com/kumodot/kumocam/releases/latest">&#11015; Download for Windows</a>
+      <a class="btn-kofi" href="https://ko-fi.com/msouza3d">&#9749; Support on Ko-fi</a>
       <a class="btn-ghost" href="https://github.com/kumodot/kumocam">View on GitHub</a>
     </div>
     <p class="hero-note">
@@ -157,13 +165,15 @@
 <!-- ================= SCREENSHOT ================= -->
 <section class="shot-section">
   <div class="shot-inner">
-    <h2 class="section-h2 shot-headline">Scan. Review. Import.</h2>
+    <h2 class="section-h2 shot-headline">See it in action</h2>
     <p class="section-sub shot-headline">
-      One screen shows everything: what is new, what you already imported,
-      and what looks corrupted - before a single file is copied.
+      Scan, review, import, convert with LUTs, merge - a real session,
+      start to finish. Originals are never touched.
     </p>
     <div class="shot-frame shot-image">
-      <img src="kumocam_import.png" alt="KumoCam import tab scanning an Osmo Pocket SD card">
+      <video src="kumocam_tour.mp4" autoplay loop muted playsinline
+             poster="kumocam_import.png"
+             aria-label="KumoCam tour: scanning, importing and converting camera footage"></video>
     </div>
   </div>
 </section>

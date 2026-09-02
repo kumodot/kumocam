@@ -45,3 +45,7 @@ desktop.ini
 packaging/ffmpeg_bin/
 packaging/Output/
 packaging/*.zip
+
+# Landing page media are allowed (gitignore blocks camera media elsewhere)
+!docs/*.mp4
+!docs/*.gif
