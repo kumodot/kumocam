@@ -101,6 +101,11 @@ class ImportTab(QWidget):
         self.chk_only_new.setChecked(
             self.settings.value("show_only_new", "false") in (True, "true"))
         self.chk_only_new.blockSignals(False)
+        # Remember the eject-after-import preference (default: off).
+        self.chk_eject_after.blockSignals(True)
+        self.chk_eject_after.setChecked(
+            self.settings.value("eject_after_import", "false") in (True, "true"))
+        self.chk_eject_after.blockSignals(False)
         self.edit_target.editingFinished.connect(self._recheck_library)
         self.refresh_volumes()
         self._check_ffprobe()
@@ -203,6 +208,12 @@ class ImportTab(QWidget):
             "Automatically uncheck files flagged red (suspiciously small, "
             "possibly corrupted) after every scan.")
         self.chk_skip_red.toggled.connect(self._skip_red_toggled)
+        self.chk_eject_after = QCheckBox("Eject drives after import")
+        self.chk_eject_after.setToolTip(
+            "When the import finishes without errors, safely eject the "
+            "checked source drives so the camera can be unplugged right away.")
+        self.chk_eject_after.toggled.connect(
+            lambda checked: self.settings.setValue("eject_after_import", checked))
         ig.addWidget(self.chk_aac, 0, 0)
         ig.addWidget(self.chk_lrf, 1, 0)
         ig.addWidget(self.chk_lrf_mp4, 2, 0)
@@ -210,6 +221,7 @@ class ImportTab(QWidget):
         ig.addWidget(self.chk_split_orient, 1, 1)
         ig.addWidget(self.combo_conflict, 0, 2)
         ig.addWidget(self.chk_skip_red, 1, 2)
+        ig.addWidget(self.chk_eject_after, 2, 1, 1, 2)
         opts_row.addWidget(import_group, stretch=2)
 
         # Scan filter: which media kinds the next scan looks for.
@@ -325,8 +337,13 @@ class ImportTab(QWidget):
             self.volume_list.addItem(item)
 
     def _eject_checked(self):
+        self._do_eject(interactive=True)
+
+    def _do_eject(self, interactive: bool) -> str:
         """Safely eject every CHECKED source that is a real volume root
-        (drive letter / mounted volume). Added folders are ignored."""
+        (drive letter / mounted volume). Added folders are ignored.
+        Returns a one-line summary ('' when there was nothing to eject).
+        interactive=False (auto-eject after import) never shows popups."""
         import os as _os
         import sys as _sys
         from ..core.drives import eject_volume
@@ -340,11 +357,12 @@ class ImportTab(QWidget):
 
         targets = [s for s in self._checked_sources() if is_volume_root(s)]
         if not targets:
-            QMessageBox.information(
-                self, "Nothing to eject",
-                "Tick the drive(s) you want to eject in the Sources list "
-                "(added folders cannot be ejected).")
-            return
+            if interactive:
+                QMessageBox.information(
+                    self, "Nothing to eject",
+                    "Tick the drive(s) you want to eject in the Sources list "
+                    "(added folders cannot be ejected).")
+            return ""
         messages, all_ok = [], True
         for path in targets:
             ok, msg = eject_volume(path)
@@ -353,10 +371,14 @@ class ImportTab(QWidget):
             self.log.appendPlainText(msg)
         self.refresh_volumes()
         if all_ok:
-            self.status.setText("Ejected: " + ", ".join(targets) +
-                                " - safe to unplug the camera.")
+            summary = ("Ejected " + ", ".join(targets) +
+                       " - safe to unplug the camera.")
+            self.status.setText(summary)
         else:
-            QMessageBox.warning(self, "Eject", "\n".join(messages))
+            summary = "Eject FAILED for some drives (see log)."
+            if interactive:
+                QMessageBox.warning(self, "Eject", "\n".join(messages))
+        return summary
 
     def add_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Add source folder")
@@ -690,6 +712,13 @@ class ImportTab(QWidget):
         if errors:
             msg += f" {len(errors)} errors (see log)."
         self.status.setText(msg)
+        # Auto-eject only after a clean, uncancelled import.
+        was_cancelled = bool(self.import_worker and self.import_worker._cancel)
+        if (self.chk_eject_after.isChecked() and not errors
+                and not was_cancelled):
+            eject_summary = self._do_eject(interactive=False)
+            if eject_summary:
+                msg += "\n\n" + eject_summary
         QMessageBox.information(self, "Import finished", msg)
 
     # -------------------------------------------------------------- misc

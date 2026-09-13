@@ -63,6 +63,8 @@ class ConvertTab(QWidget):
         self.settings = QSettings("OsmoCompanion", "OsmoCompanion")
         self._build_ui()
         self._check_ffmpeg()
+        # Videos (or folders of videos) can be dragged straight onto the tab.
+        self.setAcceptDrops(True)
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self):
@@ -206,8 +208,48 @@ class ConvertTab(QWidget):
         self.progress.setVisible(False)
         layout.addWidget(self.progress)
 
-        self.status = QLabel("Add videos or a folder to start.")
+        self.status = QLabel("Add videos or a folder to start - or just drag & drop them here.")
         layout.addWidget(self.status)
+
+    # ------------------------------------------------------- drag and drop
+    def dragEnterEvent(self, event):  # noqa: N802 (Qt API)
+        if self._paths_from_mime(event.mimeData()):
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):  # noqa: N802 (Qt API)
+        paths = self._paths_from_mime(event.mimeData())
+        if not paths:
+            return
+        event.acceptProposedAction()
+        found = []
+        for p in paths:
+            if os.path.isdir(p):
+                for dirpath, dirnames, filenames in os.walk(p):
+                    dirnames[:] = [d for d in dirnames if d.upper() != "CONVERTED"]
+                    for f in sorted(filenames):
+                        if os.path.splitext(f)[1].lower() in VIDEO_EXTS:
+                            found.append(os.path.join(dirpath, f))
+            elif os.path.splitext(p)[1].lower() in VIDEO_EXTS:
+                found.append(p)
+        found = [f for f in found if self._is_new(f)]
+        if found:
+            self._probe(found)
+        else:
+            self.status.setText("No new videos in the dropped files.")
+
+    @staticmethod
+    def _paths_from_mime(mime) -> List[str]:
+        """Local files/folders in a drag: videos or directories only."""
+        if not mime.hasUrls():
+            return []
+        out = []
+        for url in mime.urls():
+            p = url.toLocalFile()
+            if not p:
+                continue
+            if os.path.isdir(p) or os.path.splitext(p)[1].lower() in VIDEO_EXTS:
+                out.append(p)
+        return out
 
     # ---------------------------------------------------------- source ops
     def add_files(self):
